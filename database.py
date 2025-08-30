@@ -17,9 +17,9 @@ class Candidate(Base):
 	)
 	full_name: Mapped[str]
 	email: Mapped[str]
-	phone: Mapped[str]
-	skills: Mapped[str]
-	created_at: Mapped[str]
+# 	phone: Mapped[str]
+# 	skills: Mapped[str]
+# 	created_at: Mapped[str]
 
 
 # class Application(Base):
