@@ -40,23 +40,29 @@ class Candidate(Base):
 	created_at: Mapped[datetime] = mapped_column(
 		DateTime, default=datetime.utcnow
 	)
+	applications: Mapped[list["Application"]] = relationship(
+		back_populates="candidate"
+	)
 
 
 class Application(Base):
- 	__tablename__ = "applications"
- 	id: Mapped[int] = mapped_column(
- 		primary_key=True,
- 	)
- 	candidate_id: Mapped["Candidate"] = relationship(
-		back_populates="candidates"
+	__tablename__ = "applications"
+	id: Mapped[int] = mapped_column(
+		primary_key=True,
 	)
- 	job_title: Mapped[str]
- 	status: Mapped[StatusEnum] = mapped_column(
+	candidate_id: Mapped[int] = mapped_column(
+		ForeignKey("candidates.id")
+	)
+	candidate: Mapped["Candidate"] = relationship(
+		back_populates="applications"
+	)
+	job_title: Mapped[str]
+	status: Mapped[StatusEnum] = mapped_column(
 		Enum(StatusEnum, name="status_enum"),
 		nullable=False,
 		default=StatusEnum.APPLIED
 	)
- 	applied_at: Mapped[datetime] = mapped_column(
+	applied_at: Mapped[datetime] = mapped_column(
 		DateTime, default=datetime.utcnow
 	)
 

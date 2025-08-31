@@ -7,6 +7,8 @@ from app.db_connection import (
 	get_db_session,
 	get_engine
 )
+from typing import Annotated
+from app.operations import create_candidate
 
 
 @asynccontextmanager
@@ -21,35 +23,37 @@ async def lifespan(app: FastAPI):
 app = FastAPI(lifespan=lifespan)
 
 
-# class CandidateBody(BaseModel):
-# 	full_name: str
-# 	email: str
-# 	# phone: str
-# 	# skills: str
-# 	# created_at: str
-# 
-# 
+class CandidateRequest(BaseModel):
+	full_name: str | None
+	email: str | None
+	phone: str | None
+	skills: list[str] | None
+ 
+ 
 # @app.get("/candidates")
 # def read_candidates(db: Session = Depends(get_db)):
 # 	candidates = db.query(Candidate).all()
 # 	return candidates
 # 
 # 
-# @app.post("/candidates")
-# def create_candidate(
-# 	candidate: CandidateBody,
-# 	db: Session = Depends(get_db)
-# ):
-# 	new_candidate = Candidate(
-# 		full_name=candidate.full_name,
-# 		email=candidate.full_name
-# 	)
-# 	db.add(new_candidate)
-# 	db.commit()
-# 	db.refresh(new_candidate)
-# 	return new_candidate
-# 
-# 
+@app.post("/candidates", response_model=dict[str, int])
+async def create_candidate_route(
+	candidate: CandidateRequest,
+	db_session: Annotated[
+		AsyncSession,
+		Depends(get_db_session)
+	]
+):
+	candidate_id = await create_candidate(
+		db_session,
+		candidate.full_name,
+		candidate.email,
+		candidate.phone,
+		candidate.skills,
+	)
+	return {"candidate_id": candidate_id}
+ 
+ 
 # # @app.get("/candidates")
 # # def read_candidates():
 # # list all candidates with optional filter by skill
