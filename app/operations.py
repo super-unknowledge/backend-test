@@ -1,7 +1,11 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 
-from app.database import Candidate, Application
+from app.database import (
+	Candidate,
+	Application,
+	StatusEnum
+)
 
 
 async def create_candidate(
@@ -79,10 +83,38 @@ async def update_candidate(
 		return True
 
 
-# async def create_application():
-# 
-# 
-# async def get_applications():
+async def create_application(
+	db_session: AsyncSession,
+	candidate_id: int,
+	job_title: str,
+	status: StatusEnum = StatusEnum.APPLIED,
+) -> int:
+	application = Application(
+		candidate_id=candidate_id,
+		job_title=job_title,
+		status=status,
+	)
+
+	async with db_session.begin():
+		db_session.add(application)
+		await db_session.flush()
+		application_id = application.id
+		await db_session.commit()
+	return application_id
+
+
+async def get_applications(
+	db_session: AsyncSession,
+	candidate_id: int,
+) -> list[Application]:
+	query = (
+		select(Application)
+		.where(Application.candidate_id == candidate_id)
+	)
+
+	async with db_session as session:
+		applications = await session.execute(query)
+		return applications.scalars().all()
 # 
 # 
 # async def update_application_status():
