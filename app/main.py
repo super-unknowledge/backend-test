@@ -13,6 +13,7 @@ from app.operations import (
 	create_application,
 	get_candidate,
 	get_applications,
+	update_candidate,
 )
 from app.database import StatusEnum  # Expose seperately later
 
@@ -80,29 +81,29 @@ async def read_candidate(
 	return candidate
 	
 
-# @app.put("/candidates/{candidate_id}")
-# def update_candidate(
-# 	candidate_id: int,
-# 	candidate: CandidateBody,
-# 	db: Session = Depends(get_db),
-# ):
-# 	db_candidate = (
-# 		db.query(Candidate).filter(
-# 			Candidate.id == candidate_id
-# 		).first()
-# 	)
-# 	if db_candidate is None:
-# 		raise HTTPException(
-# 			status_code=404,
-# 			detail="Candidate not found"
-# 		)
-# 	db_candidate.full_name = candidate.full_name
-# 	db_candidate.email = candidate.email
-# 	db.commit()
-# 	db.refresh(db_candidate)
-# 	return db_candidate
-# 	
-# 
+@app.put("/candidates/{candidate_id}")
+async def update_candidate_route(
+	candidate_id: int,
+	candidate_update: CandidateRequest,
+	db_session: Annotated[
+		AsyncSession, Depends(get_db_session)
+	],
+):
+	update_dict_args = candidate_update.model_dump(
+		exclude_unset=True
+	)
+
+	updated = await update_candidate(
+		db_session, candidate_id, update_dict_args
+	)
+	if not updated:
+		raise HTTPException(
+			status_code=404,
+			detail="Candidate not found"
+		)
+	return {"detail": "Candidate updated"}
+	
+
 class ApplicationRequest(BaseModel):
 	candidate_id: int
 	job_title: str | None

@@ -1,6 +1,10 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
-
+from sqlalchemy import (
+	delete,
+	select,
+	update,
+)
 from app.database import (
 	Candidate,
 	Application,
@@ -59,27 +63,27 @@ async def get_candidate(
 async def update_candidate(
 	db_session: AsyncSession,
 	candidate_id: int,
-	new_full_name: str = None,
-	new_email: str = None,
-	new_phone: str = None,
-	new_skills: list[str] = None,
+	update_candidate_dict: dict,
 ) -> bool:
-	query = (
-		update(Candidate)
-		.where(Candidate.id == candidate_id)
-		.values(
-			full_name=new_full_name,
-			email=new_email,
-			phone=new_phone,
-			skills=new_skills
-		)
+	candidate_query = update(Candidate).where(
+		Candidate.id == candidate_id
+	)
+
+	updating_candidate_values = update_candidate_dict.copy()
+
+	if updating_candidate_values == {}:
+		return False
+
+	candidate_query = candidate_query.values(
+		**updating_candidate_values
 	)
 
 	async with db_session as session:
-		candidate_updated = await session.execute(query)
+		result = await session.execute(candidate_query)
 		await session.commit()
-		if candidate_updated.rowcount == 0:
+		if result.rowcount == 0:
 			return False
+		
 		return True
 
 
@@ -115,6 +119,23 @@ async def get_applications(
 	async with db_session as session:
 		applications = await session.execute(query)
 		return applications.scalars().all()
-# 
-# 
-# async def update_application_status():
+
+
+async def update_application_status(
+	db_session: AsyncSession,
+	application_id: int,
+	new_status: StatusEnum,
+) -> bool:
+	query = (
+		update(Application)
+		.where(Application.id == application_id)
+		.values(status=new_status)
+	)
+
+	async with db_session as session:
+		application_updated = await session.execute(query)
+		await session.commit()
+		if application_updated.rowcount == 0:
+			return False
+		return True
+
