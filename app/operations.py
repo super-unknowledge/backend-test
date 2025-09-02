@@ -131,11 +131,9 @@ async def update_application_status(
 		.where(Application.id == application_id)
 		.values(status=new_status)
 	)
-
 	async with db_session as session:
 		application_updated = await session.execute(query)
 		await session.commit()
 		if application_updated.rowcount == 0:
 			return False
 		return True
-

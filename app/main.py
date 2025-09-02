@@ -14,6 +14,7 @@ from app.operations import (
 	get_candidate,
 	get_applications,
 	update_candidate,
+	update_application_status,
 )
 from app.database import StatusEnum  # Expose seperately later
 
@@ -131,7 +132,7 @@ async def create_application_route(
  
 
 @app.get("/candidates/{candidate_id}/applications")
-async def read_applications(
+async def read_applications_route(
 	db_session: Annotated[
 		AsyncSession, Depends(get_db_session)
 	],
@@ -150,6 +151,25 @@ async def read_applications(
 	return applications
 
 
-# # @app.patch("/applications/{application_id}")
-# # def update_application():
-# 
+class ApplicationUpdateRequest(BaseModel):
+	status: StatusEnum
+
+
+@app.patch("/applications/{application_id}")
+async def update_application_status_route(
+	application_id: int,
+	application_update: ApplicationUpdateRequest,
+	db_session: Annotated[
+		AsyncSession, Depends(get_db_session)
+	],
+):
+	updated = await update_application_status(
+		db_session, application_id, application_update.status
+	)
+	if not updated:
+		raise HTTPException(
+			status_code=404,
+			detail="Application not found"
+		)
+	return {"detail": "Application updated"}
+	
