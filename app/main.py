@@ -11,13 +11,14 @@ from typing import Annotated
 from app.operations import (
 	create_candidate,
 	create_application,
+	get_candidates,
 	get_candidate,
 	get_applications,
 	update_candidate,
 	update_application_status,
 )
 from app.database import StatusEnum  # Expose seperately later
-
+from typing import Optional
 @asynccontextmanager
 async def lifespan(app: FastAPI):
 	engine = get_engine()
@@ -37,12 +38,6 @@ class CandidateRequest(BaseModel):
 	skills: list[str] | None
  
  
-# @app.get("/candidates")
-# def read_candidates(db: Session = Depends(get_db)):
-# 	candidates = db.query(Candidate).all()
-# 	return candidates
-# 
-# 
 @app.post("/candidates", response_model=dict[str, int])
 async def create_candidate_route(
 	candidate: CandidateRequest,
@@ -61,12 +56,25 @@ async def create_candidate_route(
 	return {"candidate_id": candidate_id}
  
  
-# # @app.get("/candidates")
-# # def read_candidates():
-# # list all candidates with optional filter by skill
-# 
+@app.get("/candidates")
+async def get_candidates_route(
+	db_session: Annotated[
+		AsyncSession, Depends(get_db_session)
+	],
+	skill: Optional[str] = None,
+):
+	candidates = await get_candidates(db_session, skill)
+
+	if candidates is None:
+		raise HTTPException(
+			status_code=404,
+			detail="Candidate not found"
+		)
+	
+	return candidates
+
 @app.get("/candidates/{candidate_id}")
-async def read_candidate(
+async def get_candidate_route(
 	db_session: Annotated[
 		AsyncSession, Depends(get_db_session)
 	],
@@ -80,7 +88,7 @@ async def read_candidate(
 		)
 	
 	return candidate
-	
+
 
 @app.put("/candidates/{candidate_id}")
 async def update_candidate_route(

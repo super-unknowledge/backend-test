@@ -10,7 +10,7 @@ from app.database import (
 	Application,
 	StatusEnum
 )
-
+from typing import Optional
 
 async def create_candidate(
 	db_session: AsyncSession,
@@ -36,10 +36,12 @@ async def create_candidate(
 
 async def get_candidates(
 	db_session: AsyncSession,
+	skill: Optional[str] = None
 ):
-	query = (
-		select(Candidate)
-	)
+	query = select(Candidate)
+
+	if skill:
+		query = query.where(Candidate.skills.contains([skill]))
 
 	async with db_session as session:
 		candidates = await session.execute(query)
