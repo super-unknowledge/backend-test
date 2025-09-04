@@ -1,12 +1,9 @@
 from sqlalchemy.ext.asyncio import create_async_engine
-
-SQLALCHEMY_DATABASE_URL = (
-	"sqlite+aiosqlite:///.database.db"
-)
+from app.config import settings
 
 
 def get_engine():
 	return create_async_engine(
-		SQLALCHEMY_DATABASE_URL, echo=True
+		settings.database_url, echo=True
 	)
 

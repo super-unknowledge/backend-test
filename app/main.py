@@ -1,10 +1,20 @@
 from fastapi import FastAPI
 from contextlib import asynccontextmanager
+from dotenv import load_dotenv
+import os
+
 from app.db.engine import get_engine
 from app.db.base import Base
-
 from app.api import candidate_routes, application_routes
 
+from app.models.candidate import Candidate
+from app.models.application import Application
+
+
+# TODO: change to use config file later instead of dotenv
+load_dotenv()
+
+DATABASE_URL = os.getenv("DATABASE_URL")
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
