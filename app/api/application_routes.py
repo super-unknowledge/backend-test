@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated
@@ -37,14 +38,14 @@ async def get_applications_by_candidate_route(
 	db_session: Annotated[
 		AsyncSession, Depends(get_db_session)
 	],
-	candidate_id: int,
+	candidate_id: UUID,
 ):
 	return await ApplicationService.get_applications_by_candidate(db_session, candidate_id)
 
 
 @router.patch("/applications/{application_id}")
 async def update_application_status_route(
-	application_id: int,
+	application_id: UUID,
 	application_update: ApplicationUpdateRequest,
 	db_session: Annotated[
 		AsyncSession, Depends(get_db_session)

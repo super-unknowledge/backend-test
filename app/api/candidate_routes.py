@@ -1,3 +1,4 @@
+from uuid import UUID
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 from typing import Annotated, Optional
@@ -42,7 +43,7 @@ async def get_candidate_by_id_route(
 	db_session: Annotated[
 		AsyncSession, Depends(get_db_session)
 	],
-	candidate_id: int,
+	candidate_id: UUID,
 ):
 	candidate = await CandidateService.get_candidate_by_id(db_session, candidate_id)
 	if candidate is None:
@@ -56,7 +57,7 @@ async def get_candidate_by_id_route(
 
 @router.put("/{candidate_id}")
 async def update_candidate_route(
-	candidate_id: int,
+	candidate_id: UUID,
 	candidate_update: CandidateRequest,
 	db_session: Annotated[
 		AsyncSession, Depends(get_db_session)

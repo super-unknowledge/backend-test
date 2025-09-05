@@ -1,3 +1,4 @@
+from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.models import Application
@@ -8,7 +9,7 @@ from app.repositories import ApplicationRepository
 class ApplicationService:
 	async def create_application(
 		db_session: AsyncSession,
-		candidate_id: int,
+		candidate_id: UUID,
 		job_title: str,
 		status: StatusEnum = StatusEnum.APPLIED,
 	):
@@ -23,14 +24,14 @@ class ApplicationService:
 
 	async def get_applications_by_candidate(
 		db_session: AsyncSession,
-		candidate_id: int,
+		candidate_id: UUID,
 	):
 		return await ApplicationRepository.get_applications_by_candidate(db_session, candidate_id)
 
 
 	async def update_application_status(
 		db_session: AsyncSession,
-		application_id: int,
+		application_id: UUID,
 		new_status: StatusEnum,
 	):
 		return await ApplicationRepository.update_application_status(db_session, application_id, new_status)
