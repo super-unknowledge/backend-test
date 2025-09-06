@@ -26,7 +26,7 @@ class ApplicationService:
 	async def get_applications_by_candidate(
 		db_session: AsyncSession,
 		candidate_id: UUID,
-		status: Optional[ApplicationStatus] = None
+		status: Optional[StatusEnum] = None
 	):
 		return await ApplicationRepository.get_applications_by_candidate(
 			db_session=db_session,

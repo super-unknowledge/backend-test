@@ -19,6 +19,7 @@ class CandidateRequest(BaseModel):
 	phone: Optional[str] = Field(
 		None,
 		example="(+63)2-8888-8888",
+	)
 	skills: list[str] = Field(
 		example=["singing"],
 	)
@@ -38,6 +39,7 @@ class CandidateResponse(BaseModel):
 	phone: Optional[str] = Field(
 		None,
 		example="(+63)2-8888-8888",
+	)
 	skills: list[str] = Field(
 		example=["singing"],
 	)
