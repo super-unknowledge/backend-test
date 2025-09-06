@@ -36,6 +36,7 @@ pytest-asyncio==1.1.0
 pytest-dotenv==0.5.2
 python-dotenv==1.1.1
 python-jose==3.5.0
+python-multipart==0.0.20
 redis==6.4.0
 rsa==4.9.1
 six==1.17.0

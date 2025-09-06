@@ -47,3 +47,5 @@ class CandidateResponse(BaseModel):
 		example="2025-09-05T14:30:00Z",
 	)
 
+	class Config:
+		orm_mode = True

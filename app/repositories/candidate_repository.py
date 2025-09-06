@@ -3,15 +3,17 @@ from sqlalchemy import (
 	select,
 	update,
 )
-from app.models import Candidate
+from uuid import UUID
 from typing import Optional
+
+from app.models import Candidate
 
 
 class CandidateRepository:
 	async def create_candidate(
 		db_session: AsyncSession,
 		candidate: Candidate,
-	) -> int:
+	) -> UUID:
 		async with db_session.begin():
 			db_session.add(candidate)
 			await db_session.flush()
@@ -41,7 +43,7 @@ class CandidateRepository:
 
 	async def get_candidate_by_id(
 		db_session: AsyncSession,
-		candidate_id: int,
+		candidate_id: UUID,
 	) -> Candidate | None:
 		query = (
 			select(Candidate)
@@ -55,7 +57,7 @@ class CandidateRepository:
 
 	async def update_candidate(
 		db_session: AsyncSession,
-		candidate_id: int,
+		candidate_id: UUID,
 		update_candidate_dict: dict,
 	) -> bool:
 		candidate_query = update(Candidate).where(
