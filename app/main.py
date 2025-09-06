@@ -20,6 +20,7 @@ load_dotenv()
 DATABASE_URL = os.getenv("DATABASE_URL")
 
 
+# TODO: rewrite later or comment out
 async def wait_for_db(engine, retries=10, delay=2):
     for attempt in range(1, retries + 1):
         try:
@@ -43,7 +44,22 @@ async def lifespan(app: FastAPI):
     await engine.dispose()
 
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(
+	lifespan=lifespan,
+	title="Candidate Management API",
+	description="API for handling candidate job applications.",
+	version="1.0.0",
+	openapi_tags=[
+		{
+			"name": "Candidates",
+			"description": "Operations related to candidates: adding, listing, filtering, and updating candidates",
+		},
+		{
+			"name": "Applications",
+			"description": "Operations related to applications: adding, listing, filtering, and updating applications",
+		},
+	]
+)
 
 # Include API routers
 app.include_router(candidate_routes.router)

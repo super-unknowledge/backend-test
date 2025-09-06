@@ -1,16 +1,21 @@
 from uuid import UUID
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import (
+	APIRouter,
+	Depends,
+	HTTPException,
+	Query,
+)
 from sqlalchemy.ext.asyncio import AsyncSession
-from typing import Annotated, Optional
+from typing import Annotated, Optional, List
 
 from app.db.session import get_db_session
-from app.schemas.candidate import CandidateRequest
+from app.schemas.candidate import CandidateRequest, CandidateResponse
 from app.services.candidate_service import CandidateService
 
 
 router = APIRouter(prefix="/candidates", tags=["Candidates"])
 
-@router.post("/", response_model=dict[str, int])
+@router.post("/", response_model=dict[str, UUID])
 async def create_candidate_route(
 	candidate: CandidateRequest,
 	db_session: Annotated[
@@ -20,25 +25,35 @@ async def create_candidate_route(
 ):
 	candidate_id = await CandidateService.create_candidate(
 		db_session,
-		candidate.full_name,  # TODO: refactor later full_name=...
-		candidate.email,
-		candidate.phone,
-		candidate.skills,
+		full_name=candidate.full_name,
+		email=candidate.email,
+		phone=candidate.phone,
+		skills=candidate.skills,
 	)
 	return {"candidate_id": candidate_id}
  
  
-@router.get("/")
+@router.get("/", response_model=List[CandidateResponse])
 async def get_candidates_route(
 	db_session: Annotated[
 		AsyncSession, Depends(get_db_session)
 	],
 	skill: Optional[str] = None,
+	limit: int = Query(10, ge=1),
+	offset: int = Query(20, ge=0),
 ):
-	return await CandidateService.get_candidates(db_session, skill)
+	candidates =  await CandidateService.get_candidates(db_session, skill)
+	
+	if candidates is None:
+		raise HTTPException(
+			status_code=404,
+			detail="No candidates found"
+		)
+	
+	return candidates
 
 
-@router.get("/{candidate_id}")
+@router.get("/{candidate_id}", response_model=CandidateResponse)
 async def get_candidate_by_id_route(
 	db_session: Annotated[
 		AsyncSession, Depends(get_db_session)
@@ -46,6 +61,7 @@ async def get_candidate_by_id_route(
 	candidate_id: UUID,
 ):
 	candidate = await CandidateService.get_candidate_by_id(db_session, candidate_id)
+
 	if candidate is None:
 		raise HTTPException(
 			status_code=404,
@@ -55,7 +71,7 @@ async def get_candidate_by_id_route(
 	return candidate
 
 
-@router.put("/{candidate_id}")
+@router.put("/{candidate_id}", response_model=dict[str, str])
 async def update_candidate_route(
 	candidate_id: UUID,
 	candidate_update: CandidateRequest,

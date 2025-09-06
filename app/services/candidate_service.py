@@ -28,9 +28,16 @@ class CandidateService:
 
 	async def get_candidates(
 		db_session: AsyncSession,
-		skill: Optional[str] = None
+		skill: Optional[str] = None,
+		limit: int = 10,
+		offset: int = 20,
 	):
-		return await CandidateRepository.get_candidates(db_session, skill)
+		return await CandidateRepository.get_candidates(
+		db_session=db_session,
+		skill=skill,
+		limit=limit,
+		offset=offset,
+		)
 
 
 	async def get_candidate_by_id(

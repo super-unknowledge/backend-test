@@ -23,12 +23,16 @@ class CandidateRepository:
 
 	async def get_candidates(
 		db_session: AsyncSession,
-		skill: Optional[str] = None
+		skill: Optional[str] = None,
+		limit: int = 10,
+		offset: int = 20,
 	):
 		query = select(Candidate)
 
 		if skill:
 			query = query.where(Candidate.skills.contains([skill]))
+
+		query = query.offset(offset).limit(limit)
 
 		async with db_session as session:
 			candidates = await session.execute(query)

@@ -1,5 +1,6 @@
 from uuid import UUID
 from sqlalchemy.ext.asyncio import AsyncSession
+from typing import Optional
 
 from app.models import Application
 from app.models.enums import StatusEnum
@@ -25,8 +26,13 @@ class ApplicationService:
 	async def get_applications_by_candidate(
 		db_session: AsyncSession,
 		candidate_id: UUID,
+		status: Optional[ApplicationStatus] = None
 	):
-		return await ApplicationRepository.get_applications_by_candidate(db_session, candidate_id)
+		return await ApplicationRepository.get_applications_by_candidate(
+			db_session=db_session,
+			candidate_id=candidate_id,
+			status=status,
+		)
 
 
 	async def update_application_status(

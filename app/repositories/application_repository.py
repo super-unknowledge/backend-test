@@ -3,6 +3,7 @@ from sqlalchemy import (
 	select,
 	update,
 )
+from typing import Optional
 
 from app.models import Application
 from app.models.enums import StatusEnum
@@ -24,11 +25,15 @@ class ApplicationRepository:
 	async def get_applications_by_candidate(
 		db_session: AsyncSession,
 		candidate_id: int,
+		status: Optional[StatusEnum] = None
 	) -> list[Application]:
 		query = (
 			select(Application)
 			.where(Application.candidate_id == candidate_id)
 		)
+
+		if status:
+			query = query.where(Application.status == status)
 
 		async with db_session as session:
 			applications = await session.execute(query)
