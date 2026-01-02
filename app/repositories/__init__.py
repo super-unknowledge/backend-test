@@ -1,2 +1,0 @@
-from app.repositories.candidate_repository import CandidateRepository
-from app.repositories.application_repository import ApplicationRepository
