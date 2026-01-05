@@ -44,14 +44,33 @@ class CandidateUpdate(CandidateBase):
     pass
 
 
-class Application(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+class ApplicationBase(SQLModel):
     job_title: str
     status: Status = Field(sa_column=Column(SQLEnum(Status), default=Status.APPLIED))
-    applied_at: datetime = Field(default_factory=datetime.now(timezone.utc), nullable=False)
 
-    candidate_id: uuid.UUID | None = Field(default=None, foreign_key="candidate.id")
+
+class Application(ApplicationBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    applied_at: datetime = Field(
+            default_factory=lambda: datetime.now(timezone.utc),
+            nullable=False
+    )
+
+    candidate_id: uuid.UUID = Field(foreign_key="candidate.id", nullable=False)
     candidate: Candidate | None = Relationship(back_populates="applications")
+
+
+class ApplicationPublic(ApplicationBase):
+    id: uuid.UUID
+    candidate_id: uuid.UUID
+
+
+class ApplicationCreate(ApplicationBase):
+    pass
+
+
+class ApplicationUpdate(ApplicationBase):
+    status: Status = Status.APPLIED
 
 
 class HeroBase(SQLModel):
@@ -112,8 +131,18 @@ def create_candidate(candidate: CandidateCreate, session: SessionDep):
     return db_candidate
 
 
-#@app.post("/candidates/{candidate_id}/applications")
-#def create_application():
+@app.post("/candidates/{candidate_id}/applications", response_model=ApplicationPublic)
+def create_application(
+        candidate_id: uuid.UUID,
+        application: ApplicationCreate,
+        session: SessionDep
+):
+    application_data = application.model_dump()
+    db_application = Application(**application_data, candidate_id=candidate_id)
+    session.add(db_application)
+    session.commit()
+    session.refresh(db_application)
+    return db_application
 
 
 @app.post("/heroes/", response_model=HeroPublic)
