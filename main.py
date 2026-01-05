@@ -33,7 +33,7 @@ class Application(SQLModel, table=True):
     applied_at: datetime = Field(default_factory=datetime.now(timezone.utc), nullable=False)
 
     candidate_id: uuid.UUID | None = Field(default=None, foreign_key="candidate.id")
-    candidate: Candidate | None = Relationship(back_populates="heroes")
+    candidate: Candidate | None = Relationship(back_populates="applications")
 
 
 class HeroBase(SQLModel):
@@ -85,6 +85,19 @@ def on_startup():
     create_db_and_tables()
 
 
+@app.post("/candidates/", response_model=Candidate)
+def create_candidate(candidate: Candidate, session: SessionDep):
+    db_candidate = Candidate.model_validate(candidate)
+    session.add(db_candidate)
+    session.commit()
+    session.refresh(db_candidate)
+    return db_candidate
+
+
+#@app.post("/candidates/{candidate_id}/applications")
+#def create_application():
+
+
 @app.post("/heroes/", response_model=HeroPublic)
 def create_hero(hero: HeroCreate, session: SessionDep):
     db_hero = Hero.model_validate(hero)
@@ -92,6 +105,20 @@ def create_hero(hero: HeroCreate, session: SessionDep):
     session.commit()
     session.refresh(db_hero)
     return db_hero
+
+
+@app.get("/candidates/", response_model=list[Candidate])
+def read_candidates(
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+):
+    candidates = session.exec(select(Candidate).offset(offset).limit(limit)).all()
+    return candidates
+
+
+#@app.get("/candidates/{candidate_id}/applications")
+#def read_applications():
 
 
 @app.get("/heroes/", response_model=list[HeroPublic])
@@ -104,12 +131,28 @@ def read_heroes(
     return heroes
 
 
+@app.get("/candidates/{candidate_id}", response_model=Candidate)
+def read_candidate(candidate_id: uuid.UUID, session: SessionDep):
+    candidate = session.get(Candidate, candidate_id)
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    return candidate
+
+
 @app.get("/heroes/{hero_id}", response_model=HeroPublic)
 def read_hero(hero_id: int, session: SessionDep):
     hero = session.get(Hero, hero_id)
     if not hero:
         raise HTTPException(status_code=404, detail="Hero not found")
     return hero
+
+
+#@app.put("/candidates/{candidate_id}")
+#def update_candidate()
+
+
+#@app.patch("/applications/{application_id}")
+#def update_application_status()
 
 
 @app.patch("/heroes/{hero_id}", response_model=HeroPublic)
