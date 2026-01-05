@@ -15,15 +15,33 @@ class Status(str, enum.Enum):
     HIRED = "Hired"
 
 
-class Candidate(SQLModel, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+class CandidateBase(SQLModel):
     full_name: str
     email: str = Field(unique=True)
     phone: str | None = None
     skills: list[str] = Field(sa_column=Column(JSON))
-    created_at: datetime = Field(default_factory=datetime.now(timezone.utc), nullable=False)
+
+
+class Candidate(CandidateBase, table=True):
+    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
+    created_at: datetime = Field(
+            default_factory=lambda: datetime.now(timezone.utc),
+            nullable=False
+    )
 
     applications: list["Application"] = Relationship(back_populates="candidate")
+
+
+class CandidatePublic(CandidateBase):
+    id: uuid.UUID
+
+
+class CandidateCreate(CandidateBase):
+    pass
+
+
+class CandidateUpdate(CandidateBase):
+    pass
 
 
 class Application(SQLModel, table=True):
@@ -85,8 +103,8 @@ def on_startup():
     create_db_and_tables()
 
 
-@app.post("/candidates/", response_model=Candidate)
-def create_candidate(candidate: Candidate, session: SessionDep):
+@app.post("/candidates/", response_model=CandidatePublic)
+def create_candidate(candidate: CandidateCreate, session: SessionDep):
     db_candidate = Candidate.model_validate(candidate)
     session.add(db_candidate)
     session.commit()
@@ -107,7 +125,7 @@ def create_hero(hero: HeroCreate, session: SessionDep):
     return db_hero
 
 
-@app.get("/candidates/", response_model=list[Candidate])
+@app.get("/candidates/", response_model=list[CandidatePublic])
 def read_candidates(
     session: SessionDep,
     offset: int = 0,
@@ -131,7 +149,7 @@ def read_heroes(
     return heroes
 
 
-@app.get("/candidates/{candidate_id}", response_model=Candidate)
+@app.get("/candidates/{candidate_id}", response_model=CandidatePublic)
 def read_candidate(candidate_id: uuid.UUID, session: SessionDep):
     candidate = session.get(Candidate, candidate_id)
     if not candidate:
@@ -147,8 +165,21 @@ def read_hero(hero_id: int, session: SessionDep):
     return hero
 
 
-#@app.put("/candidates/{candidate_id}")
-#def update_candidate()
+@app.put("/candidates/{candidate_id}", response_model=CandidatePublic)
+def update_candidate(
+        candidate_id: uuid.UUID,
+        candidate: CandidateUpdate,
+        session: SessionDep
+):
+    candidate_db = session.get(Candidate, candidate_id)
+    if not candidate_db:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+    candidate_data = candidate.model_dump()
+    candidate_db.sqlmodel_update(candidate_data)
+    session.add(candidate_db)
+    session.commit()
+    session.refresh(candidate_db)
+    return candidate_db
 
 
 #@app.patch("/applications/{application_id}")
