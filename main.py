@@ -164,8 +164,29 @@ def read_candidates(
     return candidates
 
 
-#@app.get("/candidates/{candidate_id}/applications")
-#def read_applications():
+@app.get(
+    "/candidates/{candidate_id}/applications",
+    response_model=list[ApplicationPublic]
+)
+def read_applications(
+    candidate_id: uuid.UUID,
+    session: SessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
+):
+    candidate = session.get(Candidate, candidate_id)
+    if not candidate:
+        raise HTTPException(status_code=404, detail="Candidate not found")
+
+    statement = (
+        select(Application)
+        .where(Application.candidate_id == candidate_id)
+        .offset(offset)
+        .limit(limit)
+    )
+    applications = session.exec(statement).all()
+
+    return applications
 
 
 @app.get("/heroes/", response_model=list[HeroPublic])
@@ -211,8 +232,21 @@ def update_candidate(
     return candidate_db
 
 
-#@app.patch("/applications/{application_id}")
-#def update_application_status()
+@app.patch("/applications/{application_id}", response_model=ApplicationPublic)
+def update_application_status(
+    application_id: uuid.UUID,
+    application: ApplicationUpdate,
+    session: SessionDep
+):
+    application_db = session.get(Application, application_id)
+    if not application_db:
+        raise HTTPException(status_code=404, detail="Application not found")
+    application_data = application.model_dump(exclude_unset=True)
+    application_db.sqlmodel_update(application_data)
+    session.add(application_db)
+    session.commit()
+    session.refresh(application_db)
+    return application_db
 
 
 @app.patch("/heroes/{hero_id}", response_model=HeroPublic)
