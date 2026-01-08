@@ -131,8 +131,8 @@ async def create_application(
 @app.get("/candidates/", response_model=list[CandidatePublic])
 async def read_candidates(
     session: AsyncSessionDep,
-    offset: int = 0,
-    limit: Annotated[int, Query(le=100)] = 100,
+    limit: int = 10,
+    offset: int = 20,
 ):
     result = await session.exec(select(Candidate).offset(offset).limit(limit))
     candidates = result.all()
@@ -146,8 +146,6 @@ async def read_candidates(
 async def read_applications(
     candidate_id: uuid.UUID,
     session: AsyncSessionDep,
-    offset: int = 0,
-    limit: Annotated[int, Query(le=100)] = 100,
 ):
     candidate = await session.get(Candidate, candidate_id)
     if not candidate:
