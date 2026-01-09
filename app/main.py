@@ -10,6 +10,7 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
+from app.api.candidate import router as candidate_router
 from app.models.candidate import CandidateBase, Candidate, CandidatePublic, CandidateCreate, CandidateUpdate
 from app.models.application import ApplicationBase, Application, ApplicationPublic, ApplicationCreate, ApplicationUpdate
 
@@ -37,19 +38,21 @@ async def get_async_session() -> AsyncSession:
 AsyncSessionDep = Annotated[AsyncSession, Depends(get_async_session)]
 app = FastAPI()
 
+app.include_router(candidate_router)
+
 
 @app.on_event("startup")
 async def on_startup():
     await create_db_and_tables()
 
 
-@app.post("/candidates/", response_model=CandidatePublic)
-async def create_candidate(candidate: CandidateCreate, session: AsyncSessionDep):
-    db_candidate = Candidate.model_validate(candidate)
-    session.add(db_candidate)
-    await session.commit()
-    await session.refresh(db_candidate)
-    return db_candidate
+#@app.post("/candidates/", response_model=CandidatePublic)
+#async def create_candidate(candidate: CandidateCreate, session: AsyncSessionDep):
+#    db_candidate = Candidate.model_validate(candidate)
+#    session.add(db_candidate)
+#    await session.commit()
+#    await session.refresh(db_candidate)
+#    return db_candidate
 
 
 @app.post("/candidates/{candidate_id}/applications", response_model=ApplicationPublic)
