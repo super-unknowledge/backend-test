@@ -10,73 +10,10 @@ from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import sessionmaker
 from sqlmodel.ext.asyncio.session import AsyncSession
 
-
-class Status(str, enum.Enum):
-    APPLIED = "Applied"
-    INTERVIEWING = "Interviewing"
-    REJECTED = "Rejected"
-    HIRED = "Hired"
+from app.models.candidate import CandidateBase, Candidate, CandidatePublic, CandidateCreate, CandidateUpdate
+from app.models.application import ApplicationBase, Application, ApplicationPublic, ApplicationCreate, ApplicationUpdate
 
 
-class CandidateBase(SQLModel):
-    full_name: str
-    email: str = Field(unique=True)
-    phone: str | None = None
-    skills: list[str] = Field(sa_column=Column(JSON))
-
-
-class Candidate(CandidateBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    created_at: datetime = Field(
-            default_factory=lambda: datetime.now(timezone.utc),
-            nullable=False
-    )
-
-    applications: list["Application"] = Relationship(back_populates="candidate")
-
-
-class CandidatePublic(CandidateBase):
-    id: uuid.UUID
-
-
-class CandidateCreate(CandidateBase):
-    pass
-
-
-class CandidateUpdate(CandidateBase):
-    pass
-
-
-class ApplicationBase(SQLModel):
-    job_title: str
-    status: Status = Field(sa_column=Column(SQLEnum(Status), default=Status.APPLIED))
-
-
-class Application(ApplicationBase, table=True):
-    id: uuid.UUID = Field(default_factory=uuid.uuid4, primary_key=True)
-    applied_at: datetime = Field(
-            default_factory=lambda: datetime.now(timezone.utc),
-            nullable=False
-    )
-
-    candidate_id: uuid.UUID = Field(foreign_key="candidate.id", nullable=False)
-    candidate: Candidate | None = Relationship(back_populates="applications")
-
-
-class ApplicationPublic(ApplicationBase):
-    id: uuid.UUID
-    candidate_id: uuid.UUID
-
-
-class ApplicationCreate(ApplicationBase):
-    pass
-
-
-class ApplicationUpdate(ApplicationBase):
-    status: Status = Status.APPLIED
-
-
-sqlite_file_name = "database.db"
 sqlite_url = f"sqlite+aiosqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}
