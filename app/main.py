@@ -14,6 +14,7 @@ from app.models.candidate import CandidateBase, Candidate, CandidatePublic, Cand
 from app.models.application import ApplicationBase, Application, ApplicationPublic, ApplicationCreate, ApplicationUpdate
 
 
+sqlite_file_name = "database.db"
 sqlite_url = f"sqlite+aiosqlite:///{sqlite_file_name}"
 
 connect_args = {"check_same_thread": False}
@@ -68,8 +69,8 @@ async def create_application(
 @app.get("/candidates/", response_model=list[CandidatePublic])
 async def read_candidates(
     session: AsyncSessionDep,
-    limit: int = 10,
-    offset: int = 20,
+    limit: Annotated[int, Query(le=100)] = 100,
+    offset: int = 0,
 ):
     result = await session.exec(select(Candidate).offset(offset).limit(limit))
     candidates = result.all()
@@ -83,6 +84,8 @@ async def read_candidates(
 async def read_applications(
     candidate_id: uuid.UUID,
     session: AsyncSessionDep,
+    offset: int = 0,
+    limit: Annotated[int, Query(le=100)] = 100,
 ):
     candidate = await session.get(Candidate, candidate_id)
     if not candidate:
