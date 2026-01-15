@@ -35,4 +35,7 @@ htmlcov/
 .DS_Store
 Thumbs.db
 
-.swp
+# Ignore vim files:
+*~
+*.swp
+*.swo
