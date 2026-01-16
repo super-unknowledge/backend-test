@@ -1,11 +1,15 @@
 #app/api/candidate.py
 from fastapi import APIRouter
+from app.models.candidate import CandidateBase, Candidate, CandidatePublic, CandidateCreate, CandidateUpdate
+from app.models.application import ApplicationBase, Application, ApplicationPublic, ApplicationCreate
+import app.mock.candidate as candidate_service
+import app.mock.application as application_service
 
 
 router = APIRouter(prefix = "/candidates")
 
 @router.post("/")
-async def create_candidate():
+async def create_candidate(candidate: CandidateCreate):
     return {"test create candidate"}
 
 @router.post("/{candidate_id}/applications")
